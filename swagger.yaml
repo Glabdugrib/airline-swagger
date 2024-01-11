@@ -1,0 +1,867 @@
+openapi: 3.0.1
+info:
+  title: Airport_API
+  version: v1
+
+paths:
+
+  /login:
+    post:
+      tags:
+      - Authentication
+      summary: It returns the bearer token used for authenticating all API calls.
+      parameters:
+      - name: Accept
+        in: header
+        schema:
+          type: string
+          enum: [application/json]
+          required: true
+          default: application/json
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string 
+                  default: test@example.com
+                  description: use the default email address "test@example.com"
+                password:
+                  type: string
+                  default: password
+                  description: use the default password "password"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Auth_Response'
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+
+  /v1/airports:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Airports
+      summary: Airports Index
+      parameters:
+      - name: Accept
+        in: header
+        schema:
+          type: string
+          enum: [application/json]
+          required: true
+          default: application/json
+      - name: city
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 50
+        description: Max 50 characters
+      - name: country
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 50
+        description: Max 50 characters
+      - name: sort_by
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+        description: Sorts results based on columns. Use __+__ for __ASC__ and __-__ for __DESC__ order (default ASC if omitted). __Important__  Need to encode URI component.
+        example: "+city"
+      - name: page
+        default: 1
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        default: 10
+        minimum: 1
+        maximum: 100
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airports_paginated'
+        '422':
+          description: Validation error.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '5XX':
+          description: Server error.
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+      - Airports
+      summary: Airports Store  
+      parameters:
+
+      - name: Accept
+        in: header
+        schema:
+          type: string
+          enum: [application/json]
+          required: true
+          default: application/json
+          
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: ['code', 'name', 'city', 'country']
+              properties:
+                code:
+                  type: string 
+                  minLength: 3
+                  maxLength: 3
+                  description: 3 Characters Airport code. Es. MXP
+                name:
+                  type: string
+                  description: The name of the Airport, Max 50 characters
+                city:
+                  type: string
+                  description: The city of the Airport, Max 50 characters
+                country:
+                  type: string
+                  description: The country of the Airport, Max 50 characters
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airport'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+
+  /v1/airports/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Airports
+      summary: Airports Show
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+
+        - name: id
+          in: path
+          description: Airoport ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airport'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Not Found.
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.    
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+      - Airports
+      summary: Airports Update 
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+        - name: id
+          in: path
+          description: Airoport ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                _method:
+                  type: string
+                  enum: [PATCH]
+                code:
+                  type: string 
+                  description: 3 Characters Airport code. Es. MXP
+                  allowEmptyValue: true 
+                name:
+                  type: string
+                  description: The name of the Airport, Max 50 characters
+                  allowEmptyValue: true 
+                city:
+                  type: string
+                  description: The city of the Airport, Max 50 characters
+                  allowEmptyValue: true                   
+                country:
+                  type: string
+                  description: The country of the Airport, Max 50 characters
+                  allowEmptyValue: true                   
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airport'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+    delete:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Airports
+      summary: Airports Delete
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+        - name: id
+          in: path
+          description: Airoport ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: No content.
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+
+  /v1/flights:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Flights
+      summary: Flights Index
+      parameters:
+      
+      - name: Accept
+        in: header
+        schema:
+          type: string
+          enum: [application/json]
+          required: true
+          default: application/json
+
+      - name: departure_airport_id
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int64
+
+      - name: arrival_airport_id
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int64
+
+      - name: departure_at_date
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          format: date
+        description: "YYYY-MM-DD"
+
+      - name: departure_at_from
+        minimum: 1
+        maximum: 24
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+        description: Accepts integer values from 1 to 24
+
+      - name: departure_at_to
+        minimum: 1
+        maximum: 24
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+        description: Accepts integer values from 1 to 24
+
+      - name: arrival_at_date
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+          format: date
+          pattern: ^\d{4}-\d{2}-\d{2}$
+        description: "YYYY-MM-DD"
+
+      - name: arrival_at_from
+        minimum: 1
+        maximum: 24
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+        description: Accepts integer values from 1 to 24
+
+      - name: arrival_at_to
+        minimum: 1
+        maximum: 24
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+        description: Accepts integer values from 1 to 24
+
+      - name: price_from
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: number
+          format: float
+          minimum: 0
+        description: Price, accept double numbers (es. 20.50)
+
+      - name: price_to
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: number
+          format: float
+          minimum: 0
+        description: Price, accept double numbers (es. 20.50)
+
+      - name: sort_by
+        required: false
+        in: query
+        style: form
+        schema:
+          type: string
+        description: Sorts results based on columns. Use __+__ for __ASC__ and __-__ for __DESC__ order (default ASC if omitted). __Important__  Need to encode URI component.
+        example: "-arrival_airport_id"
+
+      - name: page
+        default: 1
+        minimum: 1
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+
+      - name: limit
+        default: 10
+        minimum: 1
+        maximum: 100
+        required: false
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int32
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flights_paginated'
+        '422':
+          description: Validation error.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '5XX':
+          description: Server error.
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+      - Flights
+      summary: Flights Store  
+      parameters:
+
+      - name: Accept
+        in: header
+        schema:
+          type: string
+          enum: [application/json]
+          required: true
+          default: application/json
+          
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                departure_airport_id:
+                  type: integer
+                  format: int64 
+                  default: 1
+                  minimum: 1
+                  required: true
+                  description: departure airport id
+                arrival_airport_id:
+                  type: integer
+                  format: int64 
+                  default: 1
+                  minimum: 1
+                  required: true
+                  description: arrival airport id
+                departure_at:
+                  type: string
+                  format: date
+                  description: Departure datetime. Format "YYYY-MM-DD HH:mm"
+                  default: 2024-01-13 16:51
+                  pattern: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]/
+                arrival_at:
+                  type: string
+                  format: date
+                  description: Departure datetime. Format "YYYY-MM-DD HH:mm"
+                  default: 2024-01-13 18:32
+                  pattern: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]/
+                price:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Price, accept double numbers (es. 20.50)
+                  default: 20.50
+                stopovers:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 2
+                  default: 1
+                  description: Stopovers number, accept from 0 to 2
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flight'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+
+  /v1/flights/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+      - Flights
+      summary: Flights Show
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+
+        - name: id
+          in: path
+          description: Flight ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flight'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Not Found.
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.   
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+      - Flights
+      summary: Flights Update 
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+        - name: id
+          in: path
+          description: Flight ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                _method:
+                  type: string
+                  enum: [PATCH]
+                departure_airport_id:
+                  type: integer
+                  format: int64 
+                  default: 1
+                  minimum: 1
+                  required: true
+                  description: departure airport id
+                arrival_airport_id:
+                  type: integer
+                  format: int64 
+                  default: 1
+                  minimum: 1
+                  required: true
+                  description: arrival airport id
+                departure_at:
+                  type: string
+                  format: date
+                  description: Departure datetime. Format "YYYY-MM-DD HH:mm"
+                  default: 2024-01-13 16:51
+                  pattern: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]/
+                arrival_at:
+                  type: string
+                  format: date
+                  description: Departure datetime. Format "YYYY-MM-DD HH:mm"
+                  default: 2024-01-13 18:32
+                  pattern: /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]/
+                price:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Price, accept double numbers (es. 20.50)
+                  default: 20.50
+                stopovers:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 2
+                  default: 1
+                  description: Stopovers number, accept from 0 to 2
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flight'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error. 
+    delete:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Flights
+      summary: Flights Delete
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+            enum: [application/json]
+            required: true
+            default: application/json
+        - name: id
+          in: path
+          description: Flight ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: No content.
+        '422':
+          description: Validation error.
+        '5XX':
+          description: Server error.
+
+
+components:  
+
+  securitySchemes:
+      bearerAuth:      
+        type: http
+        scheme: bearer
+
+  schemas:
+
+    Flight:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 2147
+        departure_airport_id:
+          type: number
+          example: 3647
+        arrival_airport_id:
+          type: number
+          example: 4836
+        departure_at:
+          type: number
+          example: 1704799309
+        arrival_at:
+          type: number
+          example: 1704799309
+        price:
+          type: number
+          example: 145.50
+        stopovers:
+          type: number
+          example: 0
+        created_at:
+          type: number
+          example: 1704799309
+        updated_at:
+          type: number
+          example: 1704799309
+
+    Airport:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1704
+        code:
+          type: string
+          example: MXP
+        name:
+          type: string
+          example: Malpensa
+        city:
+          type: string
+          example: Milan
+        country:
+          type: string
+          example: Italy
+        created_at:
+          type: number
+          example: 1704799309
+        updated_at:
+          type: number
+          example: 1704799309
+ 
+    Auth_Response:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: AuthToken String Value
+    
+    Link:
+      type: object
+      properties: 
+        url: 
+          type: string
+          example: http://localhost/api/v1/resource?page=1
+        label: 
+          type: string
+          example: 1
+        active: 
+          type: boolean
+          example: true
+
+    Airports_paginated:
+      type: object
+      properties:
+        current_page: 
+          type: number
+          example: 1
+        data: 
+          type: array
+          items:  
+            $ref: '#/components/schemas/Airport'
+        first_page_url: 
+          type: string
+          example: http://localhost/api/v1/airports?page=1
+        from: 
+          type: number
+          example: 1
+        last_page: 
+          type: number
+          example: 13
+        last_page_url: 
+          type: string
+          example: http://localhost/api/v1/airports?page=13
+        links:  
+          type: array
+          items:  
+            $ref: '#/components/schemas/Link'
+        next_page_url: 
+          type: string
+          example: http://localhost/api/v1/airports?page=2
+        path: 
+          type: string
+          example: http://localhost/api/v1/airports
+        per_page: 
+          type: number
+          example: 10
+        prev_page_url: 
+          type: string
+          format: nullable
+        to: 
+          type: number
+          example: 10
+        total: 
+          type: number
+          example: 124
+
+    Flights_paginated:
+      type: object
+      properties:
+        current_page: 
+          type: number
+          example: 1
+        data: 
+          type: array
+          items:  
+            $ref: '#/components/schemas/Flight'
+        first_page_url: 
+          type: string
+          example: http://localhost/api/v1/flights?page=1
+        from: 
+          type: number
+          example: 1
+        last_page: 
+          type: number
+          example: 13
+        last_page_url: 
+          type: string
+          example: http://localhost/api/v1/flights?page=13
+        links:  
+          type: array
+          items:  
+            $ref: '#/components/schemas/Link'
+        next_page_url: 
+          type: string
+          example: http://localhost/api/v1/flights?page=2
+        path: 
+          type: string
+          example: http://localhost/api/v1/flights
+        per_page: 
+          type: number
+          example: 10
+        prev_page_url: 
+          type: string
+          format: nullable
+        to: 
+          type: number
+          example: 10
+        total: 
+          type: number
+          example: 124
+
+  
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+
+servers:
+- url: 'http://localhost/api/'
